@@ -5,13 +5,13 @@
 typedef unsigned char ID[4];
 
 typedef struct {
-	ID             chunkID;  /* {'f', 'm', 't', ' '} */
-	int32_t           chunkSize;
+	ID       chunkID;  /* {'f', 'm', 't', ' '} */
+	int32_t  chunkSize;
 
-	int16_t          wFormatTag;
+	int16_t  wFormatTag;
 	uint16_t wChannels;
-	uint32_t  dwSamplesPerSec;
-	uint32_t  dwAvgBytesPerSec;
+	uint32_t dwSamplesPerSec;
+	uint32_t dwAvgBytesPerSec;
 	uint16_t wBlockAlign;
 	uint16_t wBitsPerSample;
 	/* Note: there may be additional fields here,
@@ -19,15 +19,15 @@ typedef struct {
 } FormatChunk;
 
 typedef struct {
-	ID             chunkID;  /* {'d', 'a', 't', 'a'}  */
-	int32_t           chunkSize;
+	ID       chunkID;  /* {'d', 'a', 't', 'a'}  */
+	int32_t  chunkSize;
 	uint8_t  waveformData[];
 } DataChunk;
 
-void usage(char *command)
+void usage(const char *command)
 {
 	printf("usage:\n"
-	       "\t%s pcmfile wavfile channel samplerate bitspersample\n", command);
+	       "\t%s <pcm-file> <wav-file> <channels> <sample-rate> <bits-per-sample>\n", command);
 }
 
 int main(int argc, char *argv[])
@@ -35,8 +35,8 @@ int main(int argc, char *argv[])
 	FILE *pcmfile, *wavfile;
 	int32_t  pcmfile_size, chunk_size;
 	FormatChunk formatchunk;
-	DataChunk   datachunk;
-	int i, read_len;
+	DataChunk datachunk;
+	size_t read_len;
 	char buf[1024];
 
 	if (argc != 6) {
@@ -84,8 +84,10 @@ int main(int argc, char *argv[])
 	fwrite(&datachunk, 1, sizeof(ID) + sizeof(int32_t), wavfile);
 
 	while ((read_len = fread(buf, 1, sizeof(buf), pcmfile)) != 0) {
-		/* revert the endiean */
 #if 0
+		/* revert the endiean */
+		int i;
+
 		for (i = 0; i < read_len; i += 2) {
 			tmp = buf[i];
 			buf[i] = buf[i + 1];
@@ -101,4 +103,5 @@ int main(int argc, char *argv[])
 
 	fclose(pcmfile);
 	fclose(wavfile);
+	return 0;
 }
