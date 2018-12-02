@@ -7,7 +7,6 @@ typedef unsigned char ID[4];
 typedef struct {
 	ID       chunkID;  /* {'f', 'm', 't', ' '} */
 	int32_t  chunkSize;
-
 	int16_t  wFormatTag;
 	uint16_t wChannels;
 	uint32_t dwSamplesPerSec;
@@ -19,35 +18,27 @@ typedef struct {
 } FormatChunk;
 
 typedef struct {
-	ID       chunkID;  /* {'d', 'a', 't', 'a'}  */
-	int32_t  chunkSize;
-	uint8_t  waveformData[];
+	ID      chunkID;  /* {'d', 'a', 't', 'a'}  */
+	int32_t chunkSize;
+	uint8_t waveformData[];
 } DataChunk;
-
-void usage(const char *command)
-{
-	printf("usage:\n"
-	       "\t%s <pcm-file> <wav-file> <channels> <sample-rate> <bits-per-sample>\n", command);
-}
 
 int main(int argc, char *argv[])
 {
 	FILE *pcmfile, *wavfile;
-	int32_t  pcmfile_size, chunk_size;
+	int32_t pcmfile_size, chunk_size;
 	FormatChunk formatchunk;
 	DataChunk datachunk;
 	size_t read_len;
 	char buf[1024];
 
-	if (argc != 6) {
-		usage(argv[0]);
-		return 1;
-	}
+	if (argc != 6)
+		goto usage;
 
 	pcmfile = fopen(argv[1], "rb");
 	if (pcmfile == NULL) {
-		printf("!Error: Can't open pcmfile.\n");
-		return 1;
+		printf("error: Can't open pcmfile.\n");
+		return -1;
 	}
 	fseek(pcmfile, 0, SEEK_END);
 	pcmfile_size = ftell(pcmfile);
@@ -55,8 +46,8 @@ int main(int argc, char *argv[])
 
 	wavfile = fopen(argv[2], "wb");
 	if (wavfile == NULL) {
-		printf("!Error: Can't create wavfile.\n");
-		return 1;
+		printf("error: Can't create wavfile.\n");
+		return -1;
 	}
 
 	fwrite("RIFF", 1, 4, wavfile);
@@ -67,13 +58,13 @@ int main(int argc, char *argv[])
 	formatchunk.chunkID[1] = 'm';
 	formatchunk.chunkID[2] = 't';
 	formatchunk.chunkID[3] = ' ';
-	formatchunk.chunkSize  = sizeof(FormatChunk) - sizeof(ID) - sizeof(int32_t);
+	formatchunk.chunkSize = sizeof(FormatChunk) - sizeof(ID) - sizeof(int32_t);
 	formatchunk.wFormatTag = 1;   /* uncompressed */
 	formatchunk.wChannels = atoi(argv[3]);
 	formatchunk.dwSamplesPerSec = atoi(argv[4]);
 	formatchunk.wBitsPerSample = atoi(argv[5]);
 	formatchunk.wBlockAlign = formatchunk.wChannels * (formatchunk.wBitsPerSample >> 3);
-	formatchunk.dwAvgBytesPerSec =  formatchunk.wBlockAlign * formatchunk.dwSamplesPerSec;
+	formatchunk.dwAvgBytesPerSec = formatchunk.wBlockAlign * formatchunk.dwSamplesPerSec;
 	fwrite(&formatchunk, 1, sizeof(formatchunk), wavfile);
 
 	datachunk.chunkID[0] = 'd';
@@ -103,5 +94,11 @@ int main(int argc, char *argv[])
 
 	fclose(pcmfile);
 	fclose(wavfile);
+
+	return 0;
+
+usage:
+	printf("usage:\n"
+	       "\tpcm2wav <pcm-file> <wav-file> <channels> <sample-rate> <bits-per-sample>\n");
 	return 0;
 }
