@@ -1,4 +1,7 @@
+.PHONY: all
 all:
-	clang -Ofast main.c -o pcm2wav
+	gcc -O3 main.c -o pcm2wav
+
+.PHONY: clean
 clean:
-	rm pcm2wav
+	-rm -f pcm2wav
